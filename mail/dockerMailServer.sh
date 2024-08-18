@@ -24,11 +24,11 @@ echo -n "hostname: " && hostname
 echo -n "hostname -f (FQDN): " && hostname -f
 
 ########################## 启动mailserver容器 ##########################
-PassWord=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 20)
+PASSWORD=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 20)
 # 上传 compose.yaml
 wget "https://raw.githubusercontent.com/docker-mailserver/docker-mailserver/master/mailserver.env"
 docker compose up -d
-docker exec -ti mailserver setup email add january@gztech.online ${PassWord}
+docker exec -ti mailserver setup email add january@gztech.online ${PASSWORD}
 docker exec -ti mailserver setup email add postmaster@gztech.online
 docker exec -it mailserver setup alias add postmaster@gztech.online 3096459788@qq.com
 docker exec -it mailserver setup email list
@@ -44,7 +44,7 @@ echo "添加DNS记录 dkim"
 docker compose up --build -d
 docker exec -it mailserver setup email list
 #echo -e "\n" && tail -n 30 ./docker-data/dms/mail-logs/mail.log
-echo ${PassWord}
+echo "username: january, password: ${PASSWORD}"
 
 # 常用命令
 # docker ps -a
@@ -56,8 +56,8 @@ echo ${PassWord}
 # docker exec -it mailserver setup
 # docker exec -it mailserver cat /etc/dovecot/conf.d/10-master.conf
 # docker exec -it mailserver ls /etc/letsencrypt/live
-# docker exec -ti mailserver setup email add january@gztech.online ${PassWord}
-# docker exec -it mailserver setup email update january@gztech.online ${PassWord}
+# docker exec -ti mailserver setup email add january@gztech.online ${PASSWORD}
+# docker exec -it mailserver setup email update january@gztech.online ${PASSWORD}
 # docker exec -it mailserver setup email del january@gztech.online
 # 测试SSL
 # docker exec mailserver openssl s_client -connect 0.0.0.0:465 -starttls smtp -CApath /etc/letsencrypt/
