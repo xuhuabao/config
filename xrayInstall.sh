@@ -22,8 +22,7 @@ bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release
 
 xray uuid > myuuid
 xray x25519 > mykey
-echo -e "uuid: " && cat myuuid
-echo -e "key: " && cat mykey
+
 UUID=$(cat myuuid)
 Private_Key=$(grep "Private key:" mykey | awk -F"Private key: " '{print $2}')
 
@@ -40,6 +39,10 @@ jq --arg id "$UUID" --arg key "$Private_Key" \
    "$json_origin" > /usr/local/etc/xray/config.json
 
 jq -C '.inbounds[0]' /usr/local/etc/xray/config.json
+
+echo
+echo -e "uuid: " && cat myuuid
+echo -e "key: " && cat mykey
 
 systemctl enable xray
 systemctl status xray
