@@ -22,15 +22,16 @@ bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release
 
 xray uuid > myuuid
 xray x25519 > mykey
-echo -e "uuid: \n" && cat myuuid
-echo -e "key: \n" && cat mykey
+echo -e "uuid: " && cat myuuid
+echo -e "key: " && cat mykey
+UUID=$(cat myuuid)
+Private_Key=$(grep "Private key:" mykey | awk -F"Private key: " '{print $2}')
 
 echo "修改配置文件"
 echo "/usr/local/etc/xray/config.json"
 jq -C '.inbounds[0]' /usr/local/etc/xray/config.json
 
-UUID=$(cat myuuid)
-Private_Key=$(grep "Private key:" mykey | awk -F"Private key: " '{print $2}')
+wget "https://raw.githubusercontent.com/xuhuabao/config/main/xray_server_config.json"
 json_origin="./xray_server_config.json"
 
 jq --arg id "$UUID" --arg key "$Private_Key" \
@@ -43,4 +44,4 @@ jq -C '.inbounds[0]' /usr/local/etc/xray/config.json
 systemctl enable xray
 systemctl status xray
 # cp ./vpn/xray_server_config.json /usr/local/etc/xray/config.json
- systemctl restart xray
+systemctl restart xray
