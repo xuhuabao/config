@@ -1,98 +1,47 @@
-{
-  "log": {
-      "loglevel": "warning",
-      "access": "/var/log/xray/access.log",
-      "error": "/var/log/xray/error.log"
-  },
+#!/bin/bash
 
-  "dns": {
-      "servers": [
-        "https+local://cloudflare-dns.com/dns-query",
-        "1.1.1.1",
-        "8.8.8.8",
-        "localhost"
-      ]
-  },
+apt-get update
+apt-get install jq
 
-  "routing": {
-      "domainStrategy": "IPIfNonMatch",
-      "rules": [
-        {
-          "type": "field",
-          "ip": [
-            "geoip:private"
-          ],
-          "outboundTag": "block"
-        },
-        {
-          "type": "field",
-          "ip": ["geoip:cn"],
-          "outboundTag": "block"
-        },
-        {
-          "type": "field",
-          "domain": [
-            "geosite:category-ads-all"
-          ],
-          "outboundTag": "block"
-        }
-      ]
-  },
+# ssh端口
+# sed -i '/^Port/c\Port 188' /etc/ssh/sshd_config
+# systemctl restart sshd
+# ss -tuln
 
-  "inbounds": [
-    {
-      "listen": "0.0.0.0",
-      "port": 801,
-      "protocol": "vless",
-      "settings": {
-          "clients": [
-               {
-                 "id": "391119",
-                 "flow": "xtls-rprx-vision"
-               }
-           ],
-           "decryption": "none"
-      },
-      "streamSettings": {
-            "network": "tcp",
-            "security": "reality",
-            "realitySettings": {
-                  "show": false,
-                  "dest": "hk.trip.com:443",
-                  "xver": 0,
-                  "serverNames": [
-                    "trip.com",
-                    "hk.trip.com"
-                  ],
-                  "privateKey": "OLL3LkCtLzgZ4AW4",
-                  "shortIds": [
-                    "16",
-                    "18",
-                    "a1",
-                    "1688",
-                    "88af20"
-                  ]
-            }
-      },
-      "sniffing": {
-        "enabled": true,
-        "destOverride": [
-          "http",
-          "tls"
-        ]
-      }
+# 终端提示符颜色
+#cat << EOF > /root/.bashrc
+#PS1='[\[\e[31m\]\u@\h\[\e[0m\]|\[\e[34m\]\w \[\e[0m\]]#: '
+#EOF
+#source /root/.bashrc
 
-    }
-  ],
+# 安装
+bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 
-  "outbounds": [
-    {
-      "tag": "direct",
-      "protocol": "freedom"
-    },
-    {
-      "tag": "block",
-      "protocol": "blackhole"
-    }
-  ]
-}
+# 卸载
+# bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ remove
+
+xray uuid > myuuid
+xray x25519 > mykey
+echo -e "uuid: \n" && cat myuuid
+echo -e "key: \n" && cat mykey
+UUID=$(cat myuuid)
+Private_Key=$(grep "Private key:" mykey | awk -F"Private key: " '{print $2}')
+
+echo "修改配置文件"
+echo "/usr/local/etc/xray/config.json"
+jq -C '.inbounds[0]' /usr/local/etc/xray/config.json
+
+wget "https://raw.githubusercontent.com/xuhuabao/config/main/xray_server_config.json"
+json_origin="./xray_server_config.json"
+
+jq --arg id "$UUID" --arg key "$Private_Key" \
+   '.inbounds[0].settings.clients[0].id = $id |
+    .inbounds[0].streamSettings.realitySettings.privateKey = $key' \
+   "$json_origin" > /usr/local/etc/xray/config.json
+
+jq -C '.inbounds[0]' /usr/local/etc/xray/config.json
+
+systemctl enable xray
+systemctl status xray
+# cp ./vpn/xray_server_config.json /usr/local/etc/xray/config.json
+systemctl restart xray
