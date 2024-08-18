@@ -1,7 +1,7 @@
 #!/bin/bash
 
 apt-get update
-apt-get install jq
+apt-get install -y jq
 
 # ssh端口
 # sed -i '/^Port/c\Port 188' /etc/ssh/sshd_config
@@ -24,7 +24,7 @@ xray uuid > myuuid
 xray x25519 > mykey
 
 UUID=$(cat myuuid)
-Private_Key=$(grep "Private key:" mykey | awk -F"Private key: " '{print $2}')
+Private_Key=$(grep "Private key:" mykey | awk -F"Private key: " '{print $2}' | xargs)
 
 echo "修改配置文件"
 echo "/usr/local/etc/xray/config.json"
@@ -33,7 +33,7 @@ jq -C '.inbounds[0]' /usr/local/etc/xray/config.json
 wget "https://raw.githubusercontent.com/xuhuabao/config/main/xray_server_config.json"
 json_origin="./xray_server_config.json"
 
-jq --arg id "$UUID" --arg key "$Private_Key" \
+jq --arg id "${UUID}" --arg key "${Private_Key}" \
    '.inbounds[0].settings.clients[0].id = $id |
     .inbounds[0].streamSettings.realitySettings.privateKey = $key' \
    "$json_origin" > /usr/local/etc/xray/config.json
