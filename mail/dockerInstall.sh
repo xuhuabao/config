@@ -13,10 +13,10 @@ echo \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
   tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-apt-get update
 # Install using the apt repository
 apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 docker run hello-world
+
 docker --version
 systemctl start docker
 systemctl enable docker
